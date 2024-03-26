@@ -1,5 +1,7 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import queue
 import sys, os, time, csv, shutil
-from common import run_cmd, run_cmd_in_docker, check_cpu_count, fetch_works, csv_write_row, MEM_PER_INSTANCE
+from common import *
 from benchmark import generate_fuzzing_worklist, generate_replay_worklist, FUZZ_TARGETS, EXP_ENV
 from replay import run_replay
 from parse_result import print_result, parse_found_time
@@ -28,13 +30,12 @@ def decide_outdir(isReproduce, target, tool):
     return outdir
 
 
-def spawn_containers(works):
-    for i in range(len(works)):
-        targ_prog, _, _, iter_id = works[i]
-        cmd = "docker run --tmpfs /box:exec --rm -m=%dg --cpuset-cpus=%d -it -d --name %s-%s %s" \
-                % (MEM_PER_INSTANCE, i, targ_prog, iter_id, IMAGE_NAME)
-        run_cmd(cmd)
-
+def start_container(work, i):
+    targ_prog, _, _, iter_id = work
+    cmd = "docker run --tmpfs /box:exec -m=%dg --cpuset-cpus=%d,%d -it -d --name %s-%s %s" \
+            % (MEM_PER_INSTANCE, i, i + LOGICAL_CPU_NUM/2,targ_prog, iter_id, IMAGE_NAME)
+    run_cmd(cmd)
+    time.sleep(10)
 
 def spawn_replay_containers(works, outdir, tool):
     for i in range(len(works)):
@@ -47,69 +48,79 @@ def spawn_replay_containers(works, outdir, tool):
         run_cmd(cmd)
 
 
-def run_fuzzing(works, tool, timelimit):
-    for (targ_prog, cmdline, src, iter_id) in works:
-        cmd = "/tool-script/run_%s.sh %s \"%s\" %s %d" % \
-                (tool, targ_prog, cmdline, src, timelimit)
-        run_cmd_in_docker("%s-%s" % (targ_prog, iter_id), cmd, True)
+def run_fuzzing(work, tool, timelimit):
+    targ_prog, cmdline, src, iter_id = work
+    cmd = "/tool-script/run_%s.sh %s \"%s\" %s %d" % \
+            (tool, targ_prog, cmdline, src, timelimit)
+    run_cmd_in_docker("%s-%s" % (targ_prog, iter_id), cmd, True)
+    time.sleep(10)
 
 
-def wait_finish(works, timelimit):
-    time.sleep(timelimit)
-    total_count = len(works)
-    elapsed_min = 0
-    while True:
-        if elapsed_min > 120:
-            break
+def wait_finish(work, timelimit):
+    elapsed_t= 0
+    while elapsed_t < timelimit:
         time.sleep(60)
-        elapsed_min += 1
-        print("Waited for %d min" % elapsed_min)
-        finished_count = 0
-        for (targ_prog, _, _, iter_id) in works:
-            container = "%s-%s" % (targ_prog, iter_id)
-            stat_str = run_cmd_in_docker(container, "cat /STATUS", False)
-            if "FINISHED" in stat_str:
-                finished_count += 1
-            else:
-                print("%s-%s not finished" % (targ_prog, iter_id))
-        if finished_count == total_count:
-            print("All works finished!")
-            break
-
-
-def store_outputs(works, outdir, tool):
-    for (targ_prog, _, _, iter_id) in works:
-        target_tool = "%s-%s" % (targ_prog, tool)
-        if not os.path.exists(os.path.join(outdir, target_tool)):
-            os.makedirs(os.path.join(outdir, target_tool), exist_ok=True)
-
-        # Clean up potential previous results
+        elapsed_t += 60
+        targ_prog, _, _, iter_id = work
         container = "%s-%s" % (targ_prog, iter_id)
-        container_outdir = os.path.join(outdir, target_tool, container)
-        if os.path.exists(container_outdir):
-            shutil.rmtree(container_outdir)
+        stat_str = run_cmd_in_docker(container, "cat /STATUS", False)
+        if "FINISHED" in stat_str:
+            print("%s-%s has finished" % (targ_prog, iter_id))
+            break
+    stop_container(work)
+    resume_container(work)
 
-        cmd = "docker cp %s:/output %s" % (container, container_outdir)
-        run_cmd(cmd)
+def store_outputs(work, outdir, tool):
+    targ_prog, cmdline, src, iter_id = work
+    target_tool = "%s-%s" % (targ_prog, tool)
+    if not os.path.exists(os.path.join(outdir, target_tool)):
+        os.makedirs(os.path.join(outdir, target_tool), exist_ok=True)
+    # Clean up potential previous results
+    container = "%s-%s" % (targ_prog, iter_id)
+    container_outdir = os.path.join(outdir, target_tool, container)
+    if os.path.exists(container_outdir):
+        shutil.rmtree(container_outdir)
+    cmd = "docker cp %s:/output %s" % (container, container_outdir)
+    run_cmd(cmd)
 
 
-def store_replay_outputs(works, outdir, tool):
-    for (targ_prog, _, _, iter_id) in works:
-        target_tool = "%s-%s" % (targ_prog, tool)
+def store_replay_outputs(work, outdir, tool):
+    targ_prog, cmdline, src, iter_id = work
+    target_tool = "%s-%s" % (targ_prog, tool)
+    log_file = os.path.join(outdir, target_tool, f"{targ_prog}-{iter_id}",
+                            "replay_log.txt")
+    time_list = parse_found_time(log_file)
+    found_time_file = os.path.join(outdir, target_tool,
+                                    f"{targ_prog}-{iter_id}",
+                                    "found_time.csv")
+    csv_write_row(found_time_file, time_list)
 
-        log_file = os.path.join(outdir, target_tool, f"{targ_prog}-{iter_id}",
-                                "replay_log.txt")
-        time_list = parse_found_time(log_file)
-        found_time_file = os.path.join(outdir, target_tool,
-                                       f"{targ_prog}-{iter_id}",
-                                       "found_time.csv")
-        csv_write_row(found_time_file, time_list)
+
+def cleanup_container(work):
+    kill_container(work)
+    remove_container(work)
 
 
-def cleanup_containers(works):
-    for (targ_prog, _, _, iter_id) in works:
-        cmd = "docker kill %s-%s" % (targ_prog, iter_id)
-        run_cmd(cmd)
+def run_experiment(task, action, timelimit, outdir_data, cpu_queue):
+    if action == "run":
+        # if os.path.isfile(os.path.join(maze_out_path, 'outputs', '.done')):
+        #     print(f"Skipping {tool}-{epoch} for {maze} as it already exists\n")
+        #     return
+        # elif os.path.isdir(maze_out_path):
+        #     print(f"removing {maze_out_path} because .done file is missing")
+        #     try:
+        #         shutil.rmtree(maze_out_path)
+        #     except Exception as e:
+        #         print(f"Error removing directory {maze_out_path}: {e}")
+        print(f"[*] Run Fuzzing for {task}")
+        work, tool = task[:-1], task[-1]
+        cpu_id = cpu_queue.get()
+        start_container(work, cpu_id)
+        run_fuzzing(work, tool, timelimit)
+        wait_finish(work, timelimit)
+        store_outputs(work, outdir_data, tool)
+        cleanup_container(work)
+        cpu_queue.put(cpu_id)
 
 
 def main():
@@ -161,30 +172,20 @@ def main():
     outdir_result = os.path.join(BASE_DIR, "output", target)
     os.makedirs(outdir_result, exist_ok=True)
 
-    # Run Fuzzing
-    if action == "run":
-        print("[*] Run Fuzzing")
-        for tool in tools:
-            worklist = generate_fuzzing_worklist(target_list, iteration)
-            while len(worklist) > 0:
-                works = fetch_works(worklist)
-                spawn_containers(works)
-                run_fuzzing(works, tool, timelimit)
-                wait_finish(works, timelimit)
-                store_outputs(works, outdir_data, tool)
-                cleanup_containers(works)
-    # Run Replay
-    if action in ["run", "replay"]:
-        print("[*] Run Replay")
-        for tool in tools:
-            worklist = generate_replay_worklist(target_list, iteration)
-            while len(worklist) > 0:
-                works = fetch_works(worklist)
-                spawn_replay_containers(works, outdir_data, tool)
-                run_replay(works, patch_vers)
-                wait_finish(works, 0)
-                store_replay_outputs(works, outdir_data, tool)
-                cleanup_containers(works)
+    worklist = generate_fuzzing_worklist(target_list, iteration)
+    targets = []
+    for tool in tools:
+        for w in worklist:
+            targets.append(w + (tool,))
+    
+    cpu_queue = queue.Queue()
+    for i in range(MAX_INSTANCE_NUM):
+        cpu_queue.put(i)
+    
+    with ThreadPoolExecutor(max_workers=MAX_INSTANCE_NUM) as executor:
+        futures = [executor.submit(run_experiment, t, action, timelimit, outdir_data, cpu_queue) for t in targets]
+        for future in as_completed(futures):
+            future.result()
 
     # Parse and print results in CSV format
     print("[*] Parse and print results in CSV format")
@@ -194,7 +195,6 @@ def main():
     if "figure" in target:
         print("[*] Draw target")
         draw_result(outdir_data, outdir_result, target)
-
 
 if __name__ == "__main__":
     main()

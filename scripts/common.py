@@ -1,9 +1,44 @@
 import os, subprocess, csv
+import time
 
 # TODO: Move to a separate file for configuration.
-MAX_INSTANCE_NUM = 40
+LOGICAL_CPU_NUM = 72
+MAX_INSTANCE_NUM = 35
 MEM_PER_INSTANCE = 4
 
+START_CMD = 'docker start %s'
+RM_CMD = 'docker rm %s'
+WAIT_CMD = 'docker wait %s'
+KILL_CMD = 'docker kill %s'
+STOP_CMD = 'docker stop %s'
+
+def kill_container(task):
+    targ_prog, cmdline, src, iter_id = task
+    container = "%s-%s" % (targ_prog, iter_id)
+    cmd = KILL_CMD % container
+    run_cmd(cmd)
+    time.sleep(10)
+
+def stop_container(task):
+    targ_prog, cmdline, src, iter_id = task
+    container = "%s-%s" % (targ_prog, iter_id)
+    cmd = STOP_CMD % container
+    run_cmd(cmd)
+    time.sleep(10)
+
+def remove_container(task):
+    targ_prog, cmdline, src, iter_id = task
+    container = "%s-%s" % (targ_prog, iter_id)
+    cmd = RM_CMD % container
+    run_cmd(cmd)    
+    time.sleep(10)
+
+def resume_container(conf, task):
+    targ_prog, cmdline, src, iter_id = task
+    container = "%s-%s" % (targ_prog, iter_id)
+    cmd = START_CMD % container
+    run_cmd(cmd)
+    time.sleep(10)
 
 def run_cmd(cmd_str):
     print("[*] Executing: %s" % cmd_str)
