@@ -12,30 +12,30 @@ WAIT_CMD = 'docker wait %s'
 KILL_CMD = 'docker kill %s'
 STOP_CMD = 'docker stop %s'
 
+def get_container_name(work):
+    targ_prog, _, _, iter_id, tool = work
+    return "%s-%s-%s" % (targ_prog, tool, iter_id)
+
 def kill_container(task):
-    targ_prog, cmdline, src, iter_id = task
-    container = "%s-%s" % (targ_prog, iter_id)
+    container = get_container_name(task)
     cmd = KILL_CMD % container
     run_cmd(cmd)
     time.sleep(10)
 
 def stop_container(task):
-    targ_prog, cmdline, src, iter_id = task
-    container = "%s-%s" % (targ_prog, iter_id)
+    container = get_container_name(task)
     cmd = STOP_CMD % container
     run_cmd(cmd)
     time.sleep(10)
 
 def remove_container(task):
-    targ_prog, cmdline, src, iter_id = task
-    container = "%s-%s" % (targ_prog, iter_id)
+    container = get_container_name(task)
     cmd = RM_CMD % container
     run_cmd(cmd)    
     time.sleep(10)
 
-def resume_container(conf, task):
-    targ_prog, cmdline, src, iter_id = task
-    container = "%s-%s" % (targ_prog, iter_id)
+def resume_container(task):
+    container = get_container_name(task)
     cmd = START_CMD % container
     run_cmd(cmd)
     time.sleep(10)
@@ -70,7 +70,8 @@ def run_cmd_in_docker(container, cmd_str, is_detached):
 
 
 def check_cpu_count():
-    n_str = run_cmd("nproc")
+    p = subprocess.Popen("nproc", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    n_str, _ = p.communicate()
     try:
         if int(n_str) < MAX_INSTANCE_NUM:
             print("Not enough CPU cores, please decrease MAX_INSTANCE_NUM")
