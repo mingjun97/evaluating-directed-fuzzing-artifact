@@ -144,7 +144,7 @@ def parse_tte(targ, targ_dir, triage_ver):
 def parse_tte_list(outdir, targ, iter_cnt, triage_ver):
     tte_list = []
     for iter_id in range(iter_cnt):
-        targ_dir = os.path.join(outdir, "%s-iter-%d" % (targ, iter_id))
+        targ_dir = os.path.join(outdir, "iter-%d" % iter_id)
         tte = parse_tte(targ, targ_dir, triage_ver)
         tte_list.append(tte)
     return tte_list

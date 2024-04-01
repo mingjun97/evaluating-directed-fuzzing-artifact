@@ -7,7 +7,7 @@ from parse_result import print_result, parse_found_time
 from plot import draw_result
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), os.pardir)
-IMAGE_NAME = "prosyslab/directed-fuzzing-benchmark"
+IMAGE_NAME = "prosyslab/directed-fuzzing-benchmark-multithread"
 SUPPORTED_TOOLS = \
   [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL" ]
 FIGURES_AND_TABLES = [
@@ -31,6 +31,13 @@ def run_fuzzing(work, timelimit):
     run_cmd_in_docker(container, cmd, True)
     time.sleep(10)
 
+def run_monitor(work, timelimit):
+    targ_prog, cmdline, src, iter_id, tool = work
+    cmd = "python3 /tool-script/monitor.py %s %s \"%s\" %s %d %s" % \
+            (tool, targ_prog, cmdline, src, timelimit, iter_id)
+    container = get_container_name(work)
+    run_cmd_in_docker(container, cmd, True)
+    time.sleep(1)
 
 def wait_finish(work, timelimit):
     elapsed_t= 0
@@ -42,6 +49,10 @@ def wait_finish(work, timelimit):
         if "FINISHED" in stat_str:
             print(f"{container} has finished")
             break
+    # Copy the output directory to the path visible by the host.
+    cmd = "cp -r /box/output /output"
+    run_cmd_in_docker(container, cmd, False)
+    time.sleep(10)
     stop_container(work)
     resume_container(work)
 
@@ -52,23 +63,11 @@ def store_outputs(work, outdir):
         os.makedirs(os.path.join(outdir, target_tool), exist_ok=True)
     # Clean up potential previous results
     container = get_container_name(work)
-    container_outdir = os.path.join(outdir, target_tool, container)
+    container_outdir = os.path.join(outdir, target_tool, iter_id)
     if os.path.exists(container_outdir):
         shutil.rmtree(container_outdir)
     cmd = "docker cp %s:/output %s" % (container, container_outdir)
     run_cmd(cmd)
-
-
-def store_replay_outputs(work, outdir):
-    targ_prog, cmdline, src, iter_id, tool = work
-    target_tool = "%s-%s" % (targ_prog, tool)
-    log_file = os.path.join(outdir, target_tool, f"{targ_prog}-{iter_id}",
-                            "replay_log.txt")
-    time_list = parse_found_time(log_file)
-    found_time_file = os.path.join(outdir, target_tool,
-                                    f"{targ_prog}-{iter_id}",
-                                    "found_time.csv")
-    csv_write_row(found_time_file, time_list)
 
 
 def cleanup_container(work):
@@ -83,6 +82,7 @@ def run_experiment(task, action, timelimit, outdir_data, cpu_queue):
         try:
             start_container(task, cpu_id)
             run_fuzzing(task, timelimit)
+            run_monitor(task, timelimit)
             wait_finish(task, timelimit)
             store_outputs(task, outdir_data)
         finally:

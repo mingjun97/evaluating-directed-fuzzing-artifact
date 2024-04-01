@@ -26,9 +26,6 @@ for crash in $CRASH_LIST; do
     fi
 done
 
-# To save storage space.
-rm -rf output/queue/
-
 # Copy the output directory to the path visible by the host.
 cp -r output /output
 

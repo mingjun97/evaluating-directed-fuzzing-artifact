@@ -9,5 +9,4 @@ FUZZER_NAME='SelectFuzz'
 timeout $4 /fuzzer/SelectFuzz/afl-fuzz \
   $DICT_OPT -m none -d -i seed -o output -- ./$1 $2
 
-
-. $(dirname $0)/common-postproc.sh
+echo "FINISHED" > /STATUS

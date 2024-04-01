@@ -35,4 +35,4 @@ export UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1
 # Remove ASAN_OPTIONS previously set for the build process. If the target binary
 # is compiled with ASAN, AFL will automatically set this variable appropriately.
 unset ASAN_OPTIONS
-START_TIME=`date "+%s"`
+touch /box/.start

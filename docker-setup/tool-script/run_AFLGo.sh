@@ -7,4 +7,4 @@ FUZZER_NAME='AFLGo'
 timeout $4 /fuzzer/AFLGo/afl-fuzz \
   $DICT_OPT -m none -d -z exp -c 21h -i seed -o output -- ./$1 $2
 
-. $(dirname $0)/common-postproc.sh
+echo "FINISHED" > /STATUS

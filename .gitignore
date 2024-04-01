@@ -1,3 +1,4 @@
 crashlog*
 output
 scripts/__pycache__
+venv/
