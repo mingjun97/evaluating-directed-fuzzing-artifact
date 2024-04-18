@@ -14,6 +14,8 @@ STOP_CMD = 'docker stop %s'
 
 def get_container_name(work):
     targ_prog, _, _, iter_id, tool = work
+    if '++' in tool:
+        tool = tool.replace('++', 'pp')
     return "%s-%s-%s" % (targ_prog, tool, iter_id)
 
 def kill_container(task):

@@ -9,16 +9,17 @@ from plot import draw_result
 BASE_DIR = os.path.join(os.path.dirname(__file__), os.pardir)
 IMAGE_NAME = "prosyslab/directed-fuzzing-benchmark-multithread"
 SUPPORTED_TOOLS = \
-  [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL" ]
+  [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL", "AFLGo++", "MazeRunner" ]
 FIGURES_AND_TABLES = [
     "table3", "table4", "table5", "table6", "table7", "table8", "table9", "table9-minimal",
-    "figure6", "figure7"
+    "figure6", "figure7",
+    "custom"
 ]
 
 def start_container(work, i):
-    targ_prog, _, _, iter_id, tool = work
-    cmd = "docker run --tmpfs /box:exec -m=%dg --cpuset-cpus=%d,%d -it -d --name %s-%s-%s %s" \
-            % (MEM_PER_INSTANCE, i, i + LOGICAL_CPU_NUM/2,targ_prog, tool, iter_id, IMAGE_NAME)
+    container = get_container_name(work)
+    cmd = "docker run --tmpfs /box:exec -m=%dg --cpuset-cpus=%d,%d -it -d --name %s %s" \
+            % (MEM_PER_INSTANCE, i, i + LOGICAL_CPU_NUM/2, container, IMAGE_NAME)
     run_cmd(cmd)
     time.sleep(10)
 

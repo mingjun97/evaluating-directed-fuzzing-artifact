@@ -62,7 +62,7 @@ def store_replay_outputs(target_tool, outdir):
     log_file = os.path.join(outdir, "replay_log.txt")
     time_list = parse_found_time(log_file)
     found_time_file = os.path.join(outdir, "found_time.csv")
-    csv_write_row(found_time_file, time_list, append=True)
+    csv_write_row(found_time_file, time_list, append=False)
 
 if __name__ == "__main__":
     global tool, targ_prog, cmdline, src, timelimit, iter_id
