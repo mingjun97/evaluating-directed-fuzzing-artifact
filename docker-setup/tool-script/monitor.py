@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+import glob
+import shutil
 import subprocess
 import os
 import sys
@@ -19,6 +21,8 @@ def monitor_crashes():
         pass
     processed = set()
     while True:
+        if tool == "MazeRunner":
+            copy_crash_files(processed)
         current_crashes = set(os.listdir(crash_dir))
         new_crashes = current_crashes - processed
         for crash in new_crashes:
@@ -34,6 +38,16 @@ def monitor_crashes():
 def run_cmd(cmd):
     print(f"[*] Executing: {cmd}")
     subprocess.run(cmd, shell=True)
+
+def copy_crash_files(processed_crashes):
+    for fp in glob.glob('/box/output/aflgo/crashes/*'):
+        if os.path.basename(fp) in processed_crashes:
+            continue
+        shutil.copy(fp, crash_dir)
+    for fp in glob.glob('/box/output/mazerunner/crashes/*'):
+        if os.path.basename(fp) in processed_crashes:
+            continue
+        shutil.copy(fp, crash_dir)
 
 def is_CVE_triggered(crash_file):
     # run common-postproc-single.sh
@@ -62,6 +76,7 @@ def store_replay_outputs(target_tool, outdir):
     log_file = os.path.join(outdir, "replay_log.txt")
     time_list = parse_found_time(log_file)
     found_time_file = os.path.join(outdir, "found_time.csv")
+    os.system(f"touch {found_time_file}")
     csv_write_row(found_time_file, time_list, append=False)
 
 if __name__ == "__main__":

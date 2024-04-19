@@ -6,12 +6,16 @@ if [ $# -ne 4 ]; then
 fi
 
 # Prepare a fresh working directory.
-rm -rf /box
-mkdir /box
+rm -rf /box/*
 cd /box
 
 # Prepare target program
-cp /benchmark/bin/${FUZZER_NAME}/$1 ./$1
+if [ "$FUZZER_NAME" = "MazeRunner" ]; then
+    cp "/benchmark/bin/${FUZZER_NAME}/$1" "./${1}_symsan"
+    cp "/benchmark/bin/AFLGo++/$1" "./${1}_aflgo++"
+else
+    cp "/benchmark/bin/${FUZZER_NAME}/$1" "./$1"
+fi
 
 # Prepare initial seed corpus
 if [ -d "/benchmark/seed/$1" ]; then
