@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FUZZER_NAME='MazeRunner'
+FUZZER_NAME='SymSan'
 
 AFLGO_BIN=/box/${1}_aflgo++
 SYMSAN_BIN=/box/${1}_symsan
@@ -19,8 +19,8 @@ nohup timeout $4 nice -n 0 \
   > output/aflgo.log 2>&1 &
 nohup timeout $4 nice -n 0 \
   /fuzzer/symsan/mazerunner/mazerunner.py \
-  -a explore -f aflgo -m reachability -o output -s $TARGET_DIR -- $SYMSAN_BIN $ATAT \
-  > output/mazerunner.log 2>&1 &
+  -a symsan -f aflgo -m reachability -o output -s $TARGET_DIR -- $SYMSAN_BIN $ATAT \
+  > output/symsan.log 2>&1 &
 
 mkdir output/crashes
 sleep $4

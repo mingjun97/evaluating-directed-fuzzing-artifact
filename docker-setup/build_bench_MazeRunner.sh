@@ -8,7 +8,7 @@ function build_with_MazeRunner() {
     for TARG in "${@:2}"; do
         str_array=($TARG)
         BIN_NAME=${str_array[0]}
-
+        # make sure ko-clang-fast wraps clang-12
         CC="/fuzzer/symsan/build/bin/ko-clang"
         CXX="/fuzzer/symsan/build/bin/ko-clang++"
         TMP_DIR=/benchmark/temp_$1
@@ -45,8 +45,8 @@ function build_with_MazeRunner() {
 
 # Build with MazeRunner
 mkdir -p /benchmark/bin/MazeRunner
-# build_with_AFLGo "libming-4.7" \
-#     "swftophp 2016-9827 2016-9829 2016-9831 2017-9988 2017-11728 2017-11729" &
+build_with_MazeRunner "libming-4.7" \
+    "swftophp 2016-9827 2016-9829 2016-9831 2017-9988 2017-11728 2017-11729" &
 build_with_MazeRunner "binutils-2.26" \
     "cxxfilt 2016-4487 2016-4489 2016-4490 2016-4491 2016-4492 2016-6131" &
 
