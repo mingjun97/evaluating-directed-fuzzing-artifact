@@ -19,7 +19,7 @@ nohup timeout $4 nice -n 0 \
   > output/aflgo.log 2>&1 &
 nohup timeout $4 nice -n 0 \
   /fuzzer/symsan/mazerunner/mazerunner.py \
-  -a symsan -f aflgo -m reachability -o output -s $TARGET_DIR -- $SYMSAN_BIN $ATAT \
+  -a symsan -n symsan -f aflgo -m reachability -o output -s $TARGET_DIR -- $SYMSAN_BIN $ATAT \
   > output/symsan.log 2>&1 &
 
 mkdir output/crashes

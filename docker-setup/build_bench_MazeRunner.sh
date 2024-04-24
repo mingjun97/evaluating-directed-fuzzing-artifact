@@ -34,7 +34,7 @@ function build_with_MazeRunner() {
             build_target $1 $CC $CXX ""
 
             ### copy results
-            copy_build_result $1 $BIN_NAME $BUG_NAME "MazeRunner"
+            copy_build_result $1 $BIN_NAME $BUG_NAME "SymSan"
             rm -rf /benchmark/RUNDIR-$1
 
             ### Cleanup

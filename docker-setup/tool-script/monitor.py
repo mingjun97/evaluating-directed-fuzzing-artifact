@@ -21,7 +21,7 @@ def monitor_crashes():
         pass
     processed = set()
     while True:
-        if tool == "MazeRunner":
+        if tool == "MazeRunner" or tool == "SymSan":
             copy_crash_files(processed)
         current_crashes = set(os.listdir(crash_dir))
         new_crashes = current_crashes - processed
@@ -44,7 +44,13 @@ def copy_crash_files(processed_crashes):
         if os.path.basename(fp) in processed_crashes:
             continue
         shutil.copy(fp, crash_dir)
-    for fp in glob.glob('/box/output/mazerunner/crashes/*'):
+    if tool == "MazeRunner":
+        ce = "mazerunner"
+    elif tool == "SymSan":
+        ce = "symsan"
+    else:
+        return
+    for fp in glob.glob(f'/box/output/{ce}/crashes/*'):
         if os.path.basename(fp) in processed_crashes:
             continue
         shutil.copy(fp, crash_dir)

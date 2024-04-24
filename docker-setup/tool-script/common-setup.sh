@@ -10,8 +10,8 @@ rm -rf /box/*
 cd /box
 
 # Prepare target program
-if [ "$FUZZER_NAME" = "MazeRunner" ]; then
-    cp "/benchmark/bin/${FUZZER_NAME}/$1" "./${1}_symsan"
+if [[ "$FUZZER_NAME" = "MazeRunner" || "$FUZZER_NAME" = "SymSan" ]]; then
+    cp "/benchmark/bin/SymSan/$1" "./${1}_symsan"
     cp "/benchmark/bin/AFLGo++/$1" "./${1}_aflgo++"
 else
     cp "/benchmark/bin/${FUZZER_NAME}/$1" "./$1"

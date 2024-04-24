@@ -138,22 +138,23 @@ def main():
         os.makedirs(outdir_data, exist_ok=True)
     ## set and make result directory for figures and tables
     outdir_result = os.path.join(BASE_DIR, "output", target)
-    os.makedirs(outdir_result, exist_ok=True)
 
-    worklist = generate_fuzzing_worklist(target_list, iteration)
-    targets = []
-    for tool in tools:
-        for w in worklist:
-            targets.append(w + (tool,))
-    
-    cpu_queue = queue.Queue()
-    for i in range(MAX_INSTANCE_NUM):
-        cpu_queue.put(i)
-    
-    with ThreadPoolExecutor(max_workers=MAX_INSTANCE_NUM) as executor:
-        futures = [executor.submit(run_experiment, t, action, timelimit, outdir_data, cpu_queue) for t in targets]
-        for future in as_completed(futures):
-            future.result()
+    if action == "run":
+        os.makedirs(outdir_result, exist_ok=True)
+        worklist = generate_fuzzing_worklist(target_list, iteration)
+        targets = []
+        for tool in tools:
+            for w in worklist:
+                targets.append(w + (tool,))
+        
+        cpu_queue = queue.Queue()
+        for i in range(MAX_INSTANCE_NUM):
+            cpu_queue.put(i)
+        
+        with ThreadPoolExecutor(max_workers=MAX_INSTANCE_NUM) as executor:
+            futures = [executor.submit(run_experiment, t, action, timelimit, outdir_data, cpu_queue) for t in targets]
+            for future in as_completed(futures):
+                future.result()
 
     # Parse and print results in CSV format
     print("[*] Parse and print results in CSV format")
