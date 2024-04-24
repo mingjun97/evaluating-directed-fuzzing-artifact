@@ -133,14 +133,20 @@ def main():
     ## if action is draw-original, set data directory for original data
     if action == "draw-original":
         outdir_data = os.path.join(BASE_DIR, "output", "original_data")
+        outdir_result = os.path.join(BASE_DIR, "output", target)
+    elif action == "draw":
+        outdir_data =os.path.join(sys.argv[3], 'data')
+        if not os.path.isdir(outdir_data):
+            print("Invalid output directory")
+            exit(1)
+        outdir_result = os.path.join(sys.argv[3], target)
     else:
         outdir_data = os.path.join(BASE_DIR, "output", "data")
-        os.makedirs(outdir_data, exist_ok=True)
-    ## set and make result directory for figures and tables
-    outdir_result = os.path.join(BASE_DIR, "output", target)
+        outdir_result = os.path.join(BASE_DIR, "output", target)
 
+    os.makedirs(outdir_result, exist_ok=True)
     if action == "run":
-        os.makedirs(outdir_result, exist_ok=True)
+        os.makedirs(outdir_data, exist_ok=True)
         worklist = generate_fuzzing_worklist(target_list, iteration)
         targets = []
         for tool in tools:

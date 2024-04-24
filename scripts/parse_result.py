@@ -108,6 +108,8 @@ def parse_tte(targ, targ_dir, triage_ver):
     replay_orig_file = os.path.join(targ_dir, REPLAY_ORIG_FILE)
     if not os.path.exists(replay_orig_file):
         replay_orig_file = os.path.join(targ_dir, ALT_REPLAY_ORIG_FILE)
+    if not os.path.isfile(replay_orig_file) or not os.path.isfile(found_time_file):
+        return None
     found_time_list = list(map(int, csv_read(found_time_file)[0]))
     n_crash = len(found_time_list)
     with open(replay_orig_file, "r", encoding="latin-1") as f:
