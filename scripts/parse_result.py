@@ -333,13 +333,13 @@ def print_result_table9(data_dir, outdir, target, tools, target_list):
             #     max_tte = "T.O.(%d)" % (TO_iter_cnt)
             # if min_tte == timelimit:
             #     min_tte = "N.A."
-
-            stat_list.append(str(int(min_tte/60)))
-            stat_list.append(str(int(max_tte/60)))
-            stat_list.append(str(int(avg/60)))
-            stat_list.append(str(int(med_tte/60)))
-            stat_list.append(str(int(q1/60)))
-            stat_list.append(str(int(q3/60)))
+            factor = 1
+            stat_list.append(str(int(min_tte/factor)))
+            stat_list.append(str(int(max_tte/factor)))
+            stat_list.append(str(int(avg/factor)))
+            stat_list.append(str(int(med_tte/factor)))
+            stat_list.append(str(int(q1/factor)))
+            stat_list.append(str(int(q3/factor)))
 
         df_dict[tool] = stat_list
 
