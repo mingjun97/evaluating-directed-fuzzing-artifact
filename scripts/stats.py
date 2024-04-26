@@ -22,8 +22,9 @@ def average_tte(tte_list, timeout):
     has_timeout = None in tte_list
     tte_list = replace_none(tte_list, timeout)
     avg_val = sum(tte_list) / len(tte_list)
-    prefix = "> " if has_timeout else ""
-    return "%s%d" % (prefix, avg_val)
+    # prefix = "> " if has_timeout else ""
+    # return "%s%d" % (prefix, avg_val)
+    return avg_val
 
 
 def median_tte(tte_list, timeout):
@@ -39,8 +40,9 @@ def median_tte(tte_list, timeout):
         i = int((n - 1) / 2)
         med_val = tte_list[i]
         half_timeout = (tte_list[i] == timeout)
-    prefix = "> " if half_timeout else ""
-    return "%s%d" % (prefix, med_val)
+    # prefix = "> " if half_timeout else ""
+    # return "%s%d" % (prefix, med_val)
+    return med_val
 
 
 def min_max_tte(tte_list, timeout):
@@ -48,9 +50,31 @@ def min_max_tte(tte_list, timeout):
     tte_list = replace_none(tte_list, timeout)
     max_val = max(tte_list)
     min_val = min(tte_list)
-    prefix = "> " if has_timeout else ""
-    return ("%d" % min_val, "%s%d" % (prefix, max_val))
+    # prefix = "> " if has_timeout else ""
+    # return ("%d" % min_val, "%s%d" % (prefix, max_val))
+    return min_val, max_val
 
+def calculate_quartile(tte_list, timeout, quartile):
+    tte_list = replace_none(tte_list, timeout)
+    tte_list.sort()
+    n = len(tte_list)
+    # Calculate the position of the quartile
+    pos = (n + 1) * quartile
+    if pos.is_integer():
+        # If position is an integer, return the value at that position
+        return tte_list[int(pos) - 1]
+    else:
+        # If position is not an integer, interpolate between surrounding values
+        lower_index = int(pos) - 1
+        upper_index = lower_index + 1
+        fraction = pos - lower_index - 1
+        return tte_list[lower_index] + fraction * (tte_list[upper_index] - tte_list[lower_index])
+
+def q1_tte(tte_list, timeout):
+    return calculate_quartile(tte_list, timeout, 0.25)
+
+def q3_tte(tte_list, timeout):
+    return calculate_quartile(tte_list, timeout, 0.75)
 
 def example():
     # Exmaple of a case where the result of log-rank test and U-test diverges

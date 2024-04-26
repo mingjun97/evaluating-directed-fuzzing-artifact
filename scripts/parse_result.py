@@ -1,7 +1,7 @@
 import sys, os, csv
 from common import csv_read
 from benchmark import EXP_ENV, check_targeted_crash_asan, check_targeted_crash_patch
-from stats import average_tte, median_tte, min_max_tte
+from stats import *
 import pandas as pd
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), os.pardir)
@@ -289,10 +289,16 @@ def print_result_table9(data_dir, outdir, target, tools, target_list):
         df_dict["Target CVE"].append(targ)
         df_dict["Target CVE"].append(targ)
         df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
 
         df_dict[" "].append("min")
         df_dict[" "].append("max")
-        df_dict[" "].append("med")
+        df_dict[" "].append("avg")
+        df_dict[" "].append("med(q2)")
+        df_dict[" "].append("q1")
+        df_dict[" "].append("q3")
 
     for tool in tools:
         stat_list = []
@@ -300,9 +306,12 @@ def print_result_table9(data_dir, outdir, target, tools, target_list):
             if "crash" in targ or "caller" in targ:
                 continue
             if tool == "AFLGo" and "2016-4487" in targ:
-                stat_list.append("-")
-                stat_list.append("-")
-                stat_list.append("-")
+                stat_list.append("N.A")
+                stat_list.append("N.A")
+                stat_list.append("N.A")
+                stat_list.append("N.A")
+                stat_list.append("N.A")
+                stat_list.append("N.A")
                 continue
             targ_dir = os.path.join(data_dir, "%s-%s" % (targ, tool))
             tte_list = parse_tte_list(targ_dir, targ,
@@ -312,20 +321,25 @@ def print_result_table9(data_dir, outdir, target, tools, target_list):
             ]
             min_tte = min(tte_list)
             max_tte = max(tte_list)
-
             med_tte = median_tte(tte_list, timelimit)
-            if ">" in med_tte:
-                med_tte = "N.A."
-            if max_tte == timelimit:
-                TO_iter_cnt = len(
-                    [x for x in tte_list if x >= timelimit])
-                max_tte = "T.O.(%d)" % (TO_iter_cnt)
-            if min_tte == timelimit:
-                min_tte = "N.A."
+            q1 = q1_tte(tte_list, timelimit)
+            q3 = q3_tte(tte_list, timelimit)
+            avg = average_tte(tte_list, timelimit)
+            # if ">" in med_tte:
+            #     med_tte = "N.A."
+            # if max_tte == timelimit:
+            #     TO_iter_cnt = len(
+            #         [x for x in tte_list if x >= timelimit])
+            #     max_tte = "T.O.(%d)" % (TO_iter_cnt)
+            # if min_tte == timelimit:
+            #     min_tte = "N.A."
 
-            stat_list.append(min_tte)
-            stat_list.append(max_tte)
-            stat_list.append(med_tte)
+            stat_list.append(str(int(min_tte/60)))
+            stat_list.append(str(int(max_tte/60)))
+            stat_list.append(str(int(avg/60)))
+            stat_list.append(str(int(med_tte/60)))
+            stat_list.append(str(int(q1/60)))
+            stat_list.append(str(int(q3/60)))
 
         df_dict[tool] = stat_list
 
