@@ -4,7 +4,7 @@ import time
 # TODO: Move to a separate file for configuration.
 LOGICAL_CPU_NUM = 72
 MAX_INSTANCE_NUM = 35
-MEM_PER_INSTANCE = 4
+MEM_PER_INSTANCE = 8
 
 START_CMD = 'docker start %s'
 RM_CMD = 'docker rm %s'
