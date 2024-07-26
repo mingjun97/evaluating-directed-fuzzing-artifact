@@ -191,8 +191,12 @@ def draw_figure6(input_dir):
 
     plt.savefig(os.path.join(output_dir, 'figure6.pdf'))
 
-
-def draw_figure7(input_dir):
+# cactus plot is a popular presentation method in survival analysis that plots the time of events in ascending order
+# For statistical tests, the log-rank test is used in survival analysis. 
+# Log-rank tests can accept censored data, such as timed-out cases in directed fuzzing. 
+# It is important to note that the log-rank test only supports the null hypothesis that two directed fuzzers are equally effective in discovering the target bug. 
+# Therefore, cactus plots must be provided along with the result of the log-rank test, if one wants to claim that one tool performs better than the other.
+def draw_cactus_plot(input_dir):
     timelimit = EXP_ENV["TIMELIMTS"]["figure7"] if "original" not in input_dir else 86400
 
     output_dir = input_dir
@@ -249,7 +253,7 @@ def draw_figure7(input_dir):
         fontsize=40,
     )
 
-    plt.savefig(os.path.join(output_dir, 'figure7-a.pdf'))
+    plt.savefig(os.path.join(output_dir, 'a.pdf'))
 
     # Draw log scale cactus plot
 
@@ -279,7 +283,7 @@ def draw_figure7(input_dir):
     plt.ylim([1, min(global_max, timelimit)])
     plt.tight_layout()
 
-    plt.savefig(os.path.join(output_dir, 'figure7-b.pdf'))
+    plt.savefig(os.path.join(output_dir, 'b.pdf'))
 
 
 def draw_result(data_dir, outdir, target):
