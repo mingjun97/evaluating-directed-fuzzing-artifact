@@ -33,6 +33,7 @@ def monitor_crashes():
                 mark_cve_discovered()
                 return
         processed.update(new_crashes)
+        print(f"processed {len(new_crashes)} new crashes")
         time.sleep(60)
 
 def run_cmd(cmd):
@@ -43,16 +44,12 @@ def copy_crash_files(processed_crashes):
     for fp in glob.glob('/box/output/aflgo/crashes/*'):
         if os.path.basename(fp) in processed_crashes:
             continue
+        print(f"copying crash file {fp} to {crash_dir}")
         shutil.copy(fp, crash_dir)
-    if tool == "MazeRunner":
-        ce = "mazerunner"
-    elif tool == "SymSan":
-        ce = "symsan"
-    else:
-        return
-    for fp in glob.glob(f'/box/output/{ce}/crashes/*'):
+    for fp in glob.glob(f'/box/output/mazerunner/crashes/*'):
         if os.path.basename(fp) in processed_crashes:
             continue
+        print(f"copying crash file {fp} to {crash_dir}")
         shutil.copy(fp, crash_dir)
 
 def is_CVE_triggered(crash_file):

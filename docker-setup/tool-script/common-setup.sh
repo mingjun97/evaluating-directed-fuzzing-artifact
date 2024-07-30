@@ -23,6 +23,7 @@ if [ -d "/benchmark/seed/$1" ]; then
 else
     mkdir seed
     cp /benchmark/seed/empty ./seed/
+    cp /benchmark/seed/A ./seed/
 fi
 
 # Prepare dictionary
