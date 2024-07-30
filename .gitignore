@@ -2,3 +2,4 @@ crashlog*
 output
 scripts/__pycache__
 venv/
+docker-setup/mazerunner_resources/
