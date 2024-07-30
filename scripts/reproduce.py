@@ -34,7 +34,7 @@ def run_fuzzing(work, timelimit):
 
 def run_monitor(work, timelimit):
     targ_prog, cmdline, src, iter_id, tool = work
-    cmd = "python3 /tool-script/monitor.py %s %s \"%s\" %s %d %s" % \
+    cmd = "python3 -u /tool-script/monitor.py %s %s \"%s\" %s %d %s &> /box/output/monitor.log" % \
             (tool, targ_prog, cmdline, src, timelimit, iter_id)
     container = get_container_name(work)
     run_cmd_in_docker(container, cmd, True)
