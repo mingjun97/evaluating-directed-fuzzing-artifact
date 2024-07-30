@@ -41,12 +41,20 @@ def run_cmd(cmd):
     subprocess.run(cmd, shell=True)
 
 def copy_crash_files(processed_crashes):
-    for fp in glob.glob('/box/output/aflgo/crashes/*'):
+    if not os.path.isdir(crash_dir):
+        os.makedirs(crash_dir)
+    aflgo_crash_dir = '/box/output/aflgo/crashes'
+    if not os.path.isdir(aflgo_crash_dir):
+        os.makedirs(aflgo_crash_dir)
+    mazerunner_crash_dir = '/box/output/mazerunner/crashes'
+    if not os.path.isdir(mazerunner_crash_dir):
+        os.makedirs(mazerunner_crash_dir)
+    for fp in glob.glob(f'{aflgo_crash_dir}/*'):
         if os.path.basename(fp) in processed_crashes:
             continue
         print(f"copying crash file {fp} to {crash_dir}")
         shutil.copy(fp, crash_dir)
-    for fp in glob.glob(f'/box/output/mazerunner/crashes/*'):
+    for fp in glob.glob(f'{mazerunner_crash_dir}/*'):
         if os.path.basename(fp) in processed_crashes:
             continue
         print(f"copying crash file {fp} to {crash_dir}")
