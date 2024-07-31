@@ -78,6 +78,12 @@ def cleanup_container(work):
 
 def run_experiment(task, action, timelimit, outdir_data, cpu_queue):
     if action == "run":
+        targ_prog, _, _, iter_id, tool = task
+        target_tool = "%s-%s" % (targ_prog, tool)
+        container_outdir = os.path.join(outdir_data, target_tool, iter_id)
+        if os.path.isdir(container_outdir):
+            print(f"Skipping {target_tool}-{iter_id}as it already exists\n")
+            return
         print(f"[*] Run Fuzzing for {task}")
         cpu_id = cpu_queue.get()
         try:
