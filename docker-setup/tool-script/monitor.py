@@ -38,7 +38,7 @@ def monitor_crashes():
 
 def run_cmd(cmd):
     print(f"[*] Executing: {cmd}")
-    subprocess.run(cmd, shell=True)
+    subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def copy_crash_files(processed_crashes):
     if not os.path.isdir(crash_dir):
