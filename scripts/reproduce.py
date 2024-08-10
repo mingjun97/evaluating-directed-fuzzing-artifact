@@ -9,7 +9,7 @@ from plot import draw_result
 BASE_DIR = os.path.join(os.path.dirname(__file__), os.pardir)
 IMAGE_NAME = "prosyslab/directed-fuzzing-benchmark-multithread"
 SUPPORTED_TOOLS = \
-  [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL", "AFLGo++", "MazeRunner", "SymSan" ]
+  [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL", "AFLGo++", "AFL++", "MazeRunner", "SymSan" ]
 FIGURES_AND_TABLES = [
     "table3", "table4", "table5", "table6", "table7", "table8", "table9", "table9-minimal",
     "figure6", "figure7",

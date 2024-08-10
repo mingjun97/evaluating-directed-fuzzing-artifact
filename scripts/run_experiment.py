@@ -5,7 +5,7 @@ from benchmark import generate_fuzzing_worklist
 BASE_DIR = os.path.join(os.path.dirname(__file__), os.pardir)
 IMAGE_NAME = "prosyslab/directed-fuzzing-benchmark"
 SUPPORTED_TOOLS = \
-  [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL", "AFLGo++", "MazeRunner", "SymSan" ]
+  [ "AFLGo", "Beacon", "WindRanger","SelectFuzz", "DAFL", "AFLGo++", "AFL++", "MazeRunner", "SymSan" ]
 
 
 def decide_outdir(exp_id, tool):

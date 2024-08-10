@@ -10,8 +10,8 @@ function build_with_AFLGo() {
         BIN_NAME=${str_array[0]}
 
         cd /benchmark
-        CC="/fuzzer/AFLGo++/instrument/afl-clang-fast"
-        CXX="/fuzzer/AFLGo++/instrument/afl-clang-fast++"
+        CC="/fuzzer/AFLGo/afl-clang-fast"
+        CXX="/fuzzer/AFLGo/afl-clang-fast++"
         # make sure afl-clang-fast wraps clang-11
         TMP_DIR=/benchmark/temp_$1
 
