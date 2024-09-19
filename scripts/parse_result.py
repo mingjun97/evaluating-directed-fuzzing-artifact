@@ -115,8 +115,7 @@ def parse_tte(targ, targ_dir, triage_ver):
     with open(replay_orig_file, "r", encoding="latin-1") as f:
         replay_orig_list = split_replay(f.read())
     if len(replay_orig_list) != n_crash:
-        print("Number of crash from replay_orig and found_time does not match")
-        exit(1)
+        print(f"Number of crash from replay_orig and found_time does not match between {replay_orig_file}:{len(replay_orig_list)} and {found_time_file}:{n_crash}")
     if triage_ver.startswith("asan"):
         for i in range(n_crash):
             if check_targeted_crash_asan(targ, replay_orig_list[i],
