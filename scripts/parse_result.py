@@ -185,7 +185,7 @@ def print_table(data_dir, outdir, target, tools, target_list, df_dict,
                         x for x in tte_list
                         if (x is None or x > timelimit)
                     ])
-                if ">" in med_tte:
+                if ">" in str(med_tte):
                     med_tte = "N.A.(%d)" % (found_iter_cnt)
                 elif name == "table6":
                     med_tte = "%s (%d)" % (med_tte, found_iter_cnt)
