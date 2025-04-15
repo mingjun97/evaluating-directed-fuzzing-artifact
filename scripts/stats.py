@@ -1,3 +1,4 @@
+import math
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
 from scipy.stats import mannwhitneyu
@@ -55,20 +56,29 @@ def min_max_tte(tte_list, timeout):
     return min_val, max_val
 
 def calculate_quartile(tte_list, timeout, quartile):
+    # Replace None values with timeout, then sort
     tte_list = replace_none(tte_list, timeout)
     tte_list.sort()
     n = len(tte_list)
-    # Calculate the position of the quartile
+    # If no data points, decide how you want to handle (e.g., return 0 or raise an error)
+    if n == 0:
+        raise ValueError("No data in tte_list")
+    # Calculate the (1-based) position of the quartile
     pos = (n + 1) * quartile
+    # If pos is <= 1, just return the first element
+    if pos <= 1:
+        return tte_list[0]
+    # If pos >= n, return the last element
+    if pos >= n:
+        return tte_list[-1]
+    # If pos is exactly an integer, use it directly (remember arrays are 0-based)
     if pos.is_integer():
-        # If position is an integer, return the value at that position
         return tte_list[int(pos) - 1]
-    else:
-        # If position is not an integer, interpolate between surrounding values
-        lower_index = int(pos) - 1
-        upper_index = lower_index + 1
-        fraction = pos - lower_index - 1
-        return tte_list[lower_index] + fraction * (tte_list[upper_index] - tte_list[lower_index])
+    # Otherwise interpolate between floor(pos) and ceil(pos)
+    lower_index = math.floor(pos) - 1
+    upper_index = lower_index + 1
+    fraction = pos - math.floor(pos)
+    return tte_list[lower_index] + fraction * (tte_list[upper_index] - tte_list[lower_index])
 
 def q1_tte(tte_list, timeout):
     return calculate_quartile(tte_list, timeout, 0.25)
