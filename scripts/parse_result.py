@@ -1,3 +1,4 @@
+import re
 import sys, os, csv
 from common import csv_read
 from benchmark import EXP_ENV, check_targeted_crash_asan, check_targeted_crash_patch
@@ -141,6 +142,23 @@ def parse_tte(targ, targ_dir, triage_ver):
         print(f"Unknown triage method: {triage_ver}")
         exit(1)
 
+def get_ts_from_fn(filename):
+    match = re.search(r'ts:(-?\d+)', filename)
+    assert match is not None, f"Distance not found in filename {filename}"
+    return float(match.group(1))
+
+def parse_ttr(targ, targ_dir, triage_ver):
+    MR_dir = os.path.join(targ_dir, "mazerunner")
+    MR_queue = os.path.join(MR_dir, "queue")
+    MR_synced = os.path.join(MR_dir, "synced")
+    ttr_list = []
+    seeds = os.listdir(MR_queue) + os.listdir(MR_synced)
+    for tc in seeds:
+        if 'dis:0,' in tc:
+            ttr_list.append(get_ts_from_fn(tc)/1000)
+    if len(ttr_list) == 0:
+        return None
+    return min(ttr_list)
 
 def parse_tte_list(outdir, targ, iter_cnt, triage_ver):
     tte_list = []
@@ -150,6 +168,14 @@ def parse_tte_list(outdir, targ, iter_cnt, triage_ver):
         tte_list.append(tte)
     return tte_list
 
+def parse_ttr_list(outdir, targ, iter_cnt, triage_ver):
+    ttr_list = []
+    for iter_id in range(iter_cnt):
+        # print(f"Computing TTR at round {iter_id} for {targ}")
+        targ_dir = os.path.join(outdir, "iter-%d" % iter_id)
+        ttr = parse_ttr(targ, targ_dir, triage_ver)
+        ttr_list.append(ttr)
+    return ttr_list
 
 def analyze_targ_result(outdir, timeout, targ, iter_cnt, triage_ver):
     tte_list = parse_tte_list(outdir, targ, iter_cnt, triage_ver)
@@ -191,6 +217,68 @@ def print_table(data_dir, outdir, target, tools, target_list, df_dict,
                     med_tte = "%s (%d)" % (med_tte, found_iter_cnt)
                 med_tte_list.append(med_tte)
         df_dict[tool] = med_tte_list
+
+    tte_df = pd.DataFrame.from_dict(df_dict)
+    tte_df.to_csv(os.path.join(outdir, "%s.csv" % target), index=False)
+
+def print_result_TTR_table(data_dir, outdir, target, tools, target_list):    
+    timelimit = EXP_ENV["TIMELIMTS"][target] if "original" not in data_dir else 86400
+    iterations = EXP_ENV["ITERATIONS"][target] if "original" not in data_dir else 160
+    triage = "patch"
+    
+    df_dict = {}
+    df_dict["Target CVE"] = []
+    df_dict[" "] = []
+    for targ in target_list:
+        if "crash" in targ or "caller" in targ:
+            continue
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+        df_dict["Target CVE"].append(targ)
+
+        df_dict[" "].append("min")
+        df_dict[" "].append("max")
+        df_dict[" "].append("avg")
+        df_dict[" "].append("med(q2)")
+        df_dict[" "].append("q1")
+        df_dict[" "].append("q3")
+    
+    for tool in tools:
+        stat_list = []
+        for targ in target_list:
+            targ_dir = os.path.join(data_dir, "%s-%s" % (targ, tool))
+            # ttr_list may contain None values
+            ttr_list = parse_ttr_list(targ_dir, targ,
+                                      iterations, triage)
+            ttr_list = [
+                x if x != None else timelimit for x in ttr_list
+            ]
+            min_tte = min(ttr_list)
+            max_tte = max(ttr_list)
+            med_tte = median_tte(ttr_list, timelimit)
+            q1 = q1_tte(ttr_list, timelimit)
+            q3 = q3_tte(ttr_list, timelimit)
+            avg = average_tte(ttr_list, timelimit)
+            # if ">" in med_tte:
+            #     med_tte = "N.A."
+            # if max_tte == timelimit:
+            #     TO_iter_cnt = len(
+            #         [x for x in ttr_list if x >= timelimit])
+            #     max_tte = "T.O.(%d)" % (TO_iter_cnt)
+            # if min_tte == timelimit:
+            #     min_tte = "N.A."
+            factor = 1
+            stat_list.append(str(int(min_tte/factor)))
+            stat_list.append(str(int(max_tte/factor)))
+            stat_list.append(str(int(avg/factor)))
+            stat_list.append(str(int(med_tte/factor)))
+            stat_list.append(str(int(q1/factor)))
+            stat_list.append(str(int(q3/factor)))
+
+        df_dict[tool] = stat_list
 
     tte_df = pd.DataFrame.from_dict(df_dict)
     tte_df.to_csv(os.path.join(outdir, "%s.csv" % target), index=False)
@@ -386,7 +474,9 @@ def print_result(data_dir, outdir, target, tools, target_list):
     elif target == "figure7":
         print_result_figure(data_dir, outdir, target, tools, target_list)
     else:
-        print_result_custom_target(data_dir, outdir, target, tools,
+        # print_result_custom_target(data_dir, outdir, target, tools,
+        #                            target_list)
+        print_result_TTR_table(data_dir, outdir, target, tools,
                                    target_list)
 
 
