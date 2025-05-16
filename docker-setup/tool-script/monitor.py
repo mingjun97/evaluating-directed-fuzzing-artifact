@@ -21,7 +21,7 @@ def monitor_crashes():
         pass
     processed = set()
     while True:
-        if tool == "MazeRunner" or tool == "SymSan":
+        if tool == "MazeRunner" or tool == "SymSan" or tool == "AFLGo++":
             copy_crash_files(processed)
         current_crashes = set(os.listdir(crash_dir))
         new_crashes = current_crashes - processed
@@ -43,7 +43,7 @@ def run_cmd(cmd):
 def copy_crash_files(processed_crashes):
     if not os.path.isdir(crash_dir):
         os.makedirs(crash_dir)
-    aflgo_crash_dir = '/box/output/aflgo/crashes'
+    aflgo_crash_dir = '/box/output/aflgo/out/crashes'
     if not os.path.isdir(aflgo_crash_dir):
         os.makedirs(aflgo_crash_dir)
     mazerunner_crash_dir = '/box/output/mazerunner/crashes'
